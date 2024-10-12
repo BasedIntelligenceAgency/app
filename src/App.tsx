@@ -1,13 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-'use client';
-
 import { createClient } from "@supabase/supabase-js";
 import { useCallback, useMemo, useState } from "react";
+import CanvasComponent from "./CanvasComponent";
 
-/**
- * Initializes Supabase client instance.
- * @see https://supabase.com/docs/reference/javascript/initializing
- */
 export function getSupabaseClient() {
   const url = import.meta.env.VITE_SUPABASE_URL;
   const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -195,6 +190,7 @@ export default function App() {
           </div>
         )}
       </div>
+      <CanvasComponent />
     </div>
   );
 }
