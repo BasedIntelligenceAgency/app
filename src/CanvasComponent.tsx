@@ -1,6 +1,7 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { TwitterTweetEmbed } from 'react-twitter-embed';
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { createClient } from '@supabase/supabase-js';
+import { useEffect, useRef, useState } from 'react';
+import { TwitterTweetEmbed } from 'react-twitter-embed';
 
 const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY);
 
@@ -9,8 +10,8 @@ const CanvasComponent = () => {
   const [tweetId, setTweetId] = useState(null);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
+    const canvas = canvasRef.current as unknown as HTMLCanvasElement;
+    const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
 
     // Load images
     const image1 = new Image();
@@ -34,8 +35,8 @@ const CanvasComponent = () => {
   }, []);
 
   const shareOnTwitter = async () => {
-    const canvas = canvasRef.current;
-    const blob = await new Promise(resolve => canvas.toBlob(resolve));
+    const canvas = canvasRef.current as unknown as HTMLCanvasElement;
+    const blob = await new Promise<Blob>((resolve) => canvas.toBlob((b) => resolve(b!)));
     const file = new File([blob], 'canvas-image.png', { type: blob.type });
 
     // Upload the image to Supabase storage
@@ -49,6 +50,7 @@ const CanvasComponent = () => {
     }
 
     // Get the public URL of the uploaded image
+    // @ts-expect-error
     const { data: publicData, error: urlError } = supabase.storage
       .from('images')
       .getPublicUrl(data.path);
@@ -68,9 +70,14 @@ const CanvasComponent = () => {
 
     window.open(tweetUrl, '_blank');
 
+    // get the tweet ID
+    const tweetResponse = await fetch(tweetUrl);
+    const tweetData = await tweetResponse.json();
+    console.log("*** tweetData", tweetData);  
+
     // Alternatively, you can use the Twitter API to post the tweet and get the tweet ID
     // Then, set the tweetId state to display the embedded tweet
-    // setTweetId(tweetResponse.id_str);
+    setTweetId(tweetData.id_str);
   };
 
   return (
