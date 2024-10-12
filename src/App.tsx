@@ -31,6 +31,8 @@ const credentialCache: Record<string, Credentials> = {};
 
 export default function App() {
   const [data, setData] = useState<Record<string, { name: string; text: string }>>();
+  const [loading, setLoading] = useState(false);
+  const [score, setScore] = useState<number | null>(null);
 
   const getCredentials = useMemo(() => {
     return (): Credentials | undefined => {
@@ -58,8 +60,9 @@ export default function App() {
       }
       setCredentialsData(credentials);
     } else {
-      localStorage.removeItem(STORAGE_KEY);
-      setCredentialsData(undefined);
+      // TODO: Keep this inactive or it kills our flow
+      // localStorage.removeItem(STORAGE_KEY);
+      // setCredentialsData(undefined);
     }
   }, []);
 
@@ -74,6 +77,8 @@ export default function App() {
       console.error("Error signing in with Twitter:", error.message);
       throw error;
     }
+
+    console.log("*** data", data);
 
     if ((data as any).user) {
       const userId = (data as any).user.user_metadata.user_name;
@@ -113,43 +118,55 @@ export default function App() {
   const fetchData = useCallback(
     async (event: { preventDefault: () => void }) => {
       event.preventDefault();
-
+  
       console.log(credentials);
-
-      // Post the tweet to the API.
-      const res = await fetch("/api/process", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId: credentials!.userId,
-        }),
-      });
-
-      // TODO: Handle errors
-      if (!res.ok) {
-        throw new Error("Failed to post process.");
+  
+      setLoading(true); // Set loading state to true
+  
+      try {
+        // Post the tweet to the API.
+        const res = await fetch(import.meta.env.VITE_SERVER_URL + "process", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId: credentials!.userId,
+          }),
+        });
+  
+        // TODO: Handle errors
+        if (!res.ok) {
+          throw new Error("Failed to post process.");
+        }
+  
+        const data = await res.json();
+        console.log(data);
+        setData(data.data);
+        setScore(data.score); // Set the score received from the API
+  
+        return data;
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false); // Set loading state back to false
       }
-
-      const data = await res.json();
-      console.log(data);
-      setData(data);
-
-      return data;
     },
     [credentials]
   );
-
+  
   return (
     <div className="min-h-screen flex flex-col justify-center items-center">
       <div className="max-w-sm w-full px-4">
         {credentials && (
           <button
-            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+            className={`bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded ${
+              loading ? "opacity-50 cursor-not-allowed" : ""
+            }`}
             onClick={fetchData}
+            disabled={loading}
           >
-            Fetch Data
+            {loading ? "Loading..." : data ? "Fetch Again" : "Fetch Data"}
           </button>
         )}
         {!credentials && (
@@ -162,6 +179,11 @@ export default function App() {
           >
             {credentials ? "Disconnect Twitter" : "Connect Twitter"}
           </button>
+        )}
+        {score !== null && (
+          <div className="mt-4">
+            <p>Your score is: {score}</p>
+          </div>
         )}
         {data && (
           <div className="mt-4 w-full h-48 overflow-y-auto">
