@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
+import { createClient } from "@supabase/supabase-js";
 import { useCallback, useMemo, useState } from "react";
-import { createClient, SupabaseClient, AuthError } from "@supabase/supabase-js";
 
 /**
  * Initializes Supabase client instance.
@@ -74,8 +75,8 @@ export default function App() {
       throw error;
     }
 
-    if (data.user) {
-      const userId = data.user.user_metadata.user_name;
+    if ((data as any).user) {
+      const userId = (data as any).user.user_metadata.user_name;
 
       const result = {
         userId: userId,
