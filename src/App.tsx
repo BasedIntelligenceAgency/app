@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import axios from "axios";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import CanvasComponent from "./CanvasComponent";
+import React, { useCallback, useEffect, useState } from "react";
 
 type Credentials = {
   userId: string;
@@ -16,7 +14,7 @@ const credentialCache: Record<string, Credentials> = {};
 
 const LoginPage: React.FC = () => {
   const handleLogin = () => {
-    window.location.href = 'http://localhost:8787/oauth/request_token';
+    window.location.href = `${import.meta.env.VITE_SERVER_URL}/oauth/request_token`;
   };
 
   return (
@@ -38,7 +36,7 @@ const CallbackPage: React.FC = () => {
 
       if (code && state) {
         try {
-          const response = await fetch(`http://localhost:8787/oauth/callback?code=${code}&state=${state}`,
+          const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/oauth/callback?code=${code}&state=${state}`,
             {
               credentials: 'include', // Add this line to include credentials in the request
             }
@@ -48,7 +46,7 @@ const CallbackPage: React.FC = () => {
           if (data.access_token && data.refresh_token) {
             // Store the credentials securely
             const credentials: Credentials = {
-              userId: '', // Set the appropriate user ID
+              userId: 'shawmakesmagic', // Set the appropriate user ID
               accessToken: data.access_token,
               refreshToken: data.refresh_token,
               expiresAt: Date.now() + data.expires_in * 1000,
@@ -91,74 +89,9 @@ const CallbackPage: React.FC = () => {
   );
 };
 
-const TwitterShare: React.FC<{ accessToken: string }> = ({ accessToken }) => {
-  const [imageData, setImageData] = useState<string | null>(null);
-
-  useEffect(() => {
-    const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-    if (canvas) {
-      const dataURL = canvas.toDataURL();
-      setImageData(dataURL);
-    }
-  }, []);
-
-  const shareOnTwitter = async () => {
-    if (!imageData) {
-      alert("No image to share!");
-      return;
-    }
-
-    try {
-      // Upload the image to Twitter
-      const mediaResponse = await axios.post(
-        "https://upload.twitter.com/1.1/media/upload.json",
-        {
-          media_data: imageData.split(",")[1],
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-        }
-      );
-
-      const mediaId = mediaResponse.data.media_id_string;
-
-      // Share the tweet with the uploaded image
-      await axios.post(
-        "https://api.twitter.com/2/tweets",
-        {
-          text: "Check out this image!",
-          media: {
-            media_ids: [mediaId],
-          },
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      alert("Tweet shared successfully!");
-    } catch (error) {
-      console.error("Error sharing tweet:", error);
-    }
-  };
-
-  return (
-    <div>
-      <button onClick={shareOnTwitter}>Share on Twitter</button>
-    </div>
-  );
-};
-
 export default function App() {
-  const [data, setData] = useState<Record<string, { name: string; text: string }>>();
+  const [data, setData] = useState<Record<string, any>>();
   const [loading, setLoading] = useState(false);
-  const [score, setScore] = useState<number | null>(null);
 
   const [credentials, setCredentialsData] = useState<Credentials | undefined>(() => {
     const storedCredentials = localStorage.getItem(STORAGE_KEY);
@@ -180,11 +113,16 @@ export default function App() {
   }, []);
 
   const disconnect = useCallback(async () => {
+    localStorage.removeItem(STORAGE_KEY);
     setCredentials(undefined);
+    setData(undefined);
   }, [setCredentials]);
 
   const fetchData = useCallback(
     async (event: { preventDefault: () => void }) => {
+      if(loading) {
+        return;
+      }
       event.preventDefault();
 
       if (!credentials) {
@@ -194,14 +132,15 @@ export default function App() {
       setLoading(true);
 
       try {
-        const res = await fetch(`${import.meta.env.VITE_SERVER_URL}process`, {
+        const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/process`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${credentials.accessToken}`,
           },
+          credentials: 'include',
           body: JSON.stringify({
-            userId: credentials.userId,
+            userId: credentials.userId || 'shawmakesmagic',
           }),
         });
 
@@ -210,8 +149,7 @@ export default function App() {
         }
 
         const data = await res.json();
-        setData(data.data);
-        setScore(data.score);
+        setData(data);
 
         return data;
       } catch (error) {
@@ -227,6 +165,7 @@ export default function App() {
     return <CallbackPage />;
   }
 
+  console.log("*** credentials", credentials);
   if (!credentials) {
     return (
       <div>
@@ -234,7 +173,6 @@ export default function App() {
       </div>
     );
   }
-
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center">
@@ -254,23 +192,72 @@ export default function App() {
         >
           Disconnect Twitter
         </button>
-        {score !== null && (
-          <div className="mt-4">
-            <p>Your score is: {score}</p>
-          </div>
-        )}
-        {data && (
-          <div className="mt-4 w-full h-48 overflow-y-auto">
-            {Object.entries(data).map(([key, value]) => (
-              <div key={key}>
-                {value.name} - {value.text}
-              </div>
-            ))}
-          </div>
-        )}
       </div>
-      <CanvasComponent />
-      <TwitterShare accessToken={credentials.accessToken} />
+      {data && (
+          <div className="mt-4 space-y-4 flex flex-col items-center text-center">
+            <div>
+              <h2 className="text-xl font-bold">Tribal Affiliation</h2>
+              <p>{data.tribal_affiliation}</p>
+            </div>
+            <div>
+              <h2 className="text-xl font-bold">Justification for Basedness</h2>
+              <p>{data.justification_for_basedness}</p>
+            </div>
+            <div>
+              <h2 className="text-xl font-bold">Contrarian Beliefs</h2>
+              {data.contrarian_beliefs.map((belief: { belief: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; justification: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; confidence: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; importance: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; }, index: React.Key | null | undefined) => (
+                <div key={index} className="mt-2">
+                  <p>
+                    <strong>Belief:</strong> {belief.belief}
+                  </p>
+                  <p>
+                    <strong>Justification:</strong> {belief.justification}
+                  </p>
+                  <p>
+                    <strong>Confidence:</strong> {belief.confidence}
+                  </p>
+                  <p>
+                    <strong>Importance:</strong> {belief.importance}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <div>
+              <h2 className="text-xl font-bold">Mainstream Beliefs</h2>
+              {data.mainstream_beliefs.map((belief: { belief: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; justification: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; confidence: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; importance: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; }, index: React.Key | null | undefined) => (
+                <div key={index} className="mt-2">
+                  <p>
+                    <strong>Belief:</strong> {belief.belief}
+                  </p>
+                  <p>
+                    <strong>Justification:</strong> {belief.justification}
+                  </p>
+                  <p>
+                    <strong>Confidence:</strong> {belief.confidence}
+                  </p>
+                  <p>
+                    <strong>Importance:</strong> {belief.importance}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <div>
+              <h2 className="text-xl font-bold">Scores</h2>
+              <p>
+                <strong>Based Score:</strong> {data.based_score}
+              </p>
+              <p>
+                <strong>Sincerity Score:</strong> {data.sincerity_score}
+              </p>
+              <p>
+                <strong>Truthfulness Score:</strong> {data.truthfulness_score}
+              </p>
+              <p>
+                <strong>Conspiracy Score:</strong> {data.conspiracy_score}
+              </p>
+            </div>
+          </div>
+        )}
     </div>
   );
 }
