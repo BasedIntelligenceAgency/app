@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createClient } from "@supabase/supabase-js";
 import { useCallback, useMemo, useState } from "react";
 import CanvasComponent from "./CanvasComponent";
@@ -24,10 +23,30 @@ const STORAGE_KEY = "sb-ypswcnhnviqsfrxzvmqx-auth-token";
 
 const credentialCache: Record<string, Credentials> = {};
 
+interface ApiResponse {
+  tribal_affiliation: string;
+  justification_for_basedness: string;
+  contrarian_beliefs: Array<{
+    belief: string;
+    justification: string;
+    confidence: number;
+    importance: number;
+  }>;
+  mainstream_beliefs: Array<{
+    belief: string;
+    justification: string;
+    confidence: number;
+    importance: number;
+  }>;
+  based_score: number;
+  sincerity_score: number;
+  truthfulness_score: number;
+  conspiracy_score: number;
+}
+
 export default function App() {
-  const [data, setData] = useState<Record<string, { name: string; text: string }>>();
+  const [apiData, setApiData] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(false);
-  const [score, setScore] = useState<number | null>(null);
 
   const getCredentials = useMemo(() => {
     return (): Credentials | undefined => {
@@ -66,9 +85,9 @@ export default function App() {
 
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "twitter",
-      options : {
-        redirectTo: "http://localhost:5173"
-      }
+      options: {
+        redirectTo: "http://localhost:5173",
+      },
     });
 
     if (error) {
@@ -93,7 +112,6 @@ export default function App() {
     }
   }, [setCredentials]);
 
-
   const [inFlight, setInFlight] = useState(false);
 
   const connect = useCallback(() => {
@@ -116,13 +134,12 @@ export default function App() {
   const fetchData = useCallback(
     async (event: { preventDefault: () => void }) => {
       event.preventDefault();
-  
+
       console.log(credentials);
-  
-      setLoading(true); // Set loading state to true
-  
+
+      setLoading(true);
+
       try {
-        // Post the tweet to the API.
         const res = await fetch(import.meta.env.VITE_SERVER_URL + "process", {
           method: "POST",
           headers: {
@@ -132,30 +149,30 @@ export default function App() {
             userId: credentials!.userId,
           }),
         });
-  
-        // TODO: Handle errors
+
         if (!res.ok) {
-          throw new Error("Failed to post process.");
+          throw new Error("Failed to process data.");
         }
-  
-        const data = await res.json();
+
+        const data: ApiResponse = await res.json();
         console.log(data);
-        setData(data.data);
-        setScore(data.score); // Set the score received from the API
-  
+        setApiData(data);
+
         return data;
       } catch (error) {
         console.error(error);
       } finally {
-        setLoading(false); // Set loading state back to false
+        setLoading(false);
       }
     },
     [credentials]
   );
-  
+
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center">
-      <div className="max-w-sm w-full px-4">
+    <div className="w-full h-full flex flex-col items-center justify-center">
+      <h1 className="text-2xl font-bold m-4 mx-auto text-center">Based or Biased</h1>
+      <h2 className="text-lg mb-4 mx-auto text-center">Are you a free thinker or an NPC? Log in to find out.</h2>
+      <div className="mx-auto p-4 w-full flex flex-col items-center justify-center">
         {credentials && (
           <button
             className={`bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded ${
@@ -164,7 +181,7 @@ export default function App() {
             onClick={fetchData}
             disabled={loading}
           >
-            {loading ? "Loading..." : data ? "Fetch Again" : "Fetch Data"}
+            {loading ? "Loading..." : apiData ? "Fetch Again" : "Fetch Data"}
           </button>
         )}
         {!credentials && (
@@ -178,22 +195,73 @@ export default function App() {
             {credentials ? "Disconnect Twitter" : "Connect Twitter"}
           </button>
         )}
-        {score !== null && (
-          <div className="mt-4">
-            <p>Your score is: {score}</p>
-          </div>
-        )}
-        {data && (
-          <div className="mt-4 w-full h-48 overflow-y-auto">
-            {Object.entries(data).map(([key, value]) => (
-              <div key={key}>
-                {value.name} - {value.text}
-              </div>
-            ))}
+        {apiData && (
+          <div className="mt-4 space-y-4 flex flex-col items-center text-center">
+            <div>
+              <h2 className="text-xl font-bold">Tribal Affiliation</h2>
+              <p>{apiData.tribal_affiliation}</p>
+            </div>
+            <div>
+              <h2 className="text-xl font-bold">Justification for Basedness</h2>
+              <p>{apiData.justification_for_basedness}</p>
+            </div>
+            <div>
+              <h2 className="text-xl font-bold">Contrarian Beliefs</h2>
+              {apiData.contrarian_beliefs.map((belief, index) => (
+                <div key={index} className="mt-2">
+                  <p>
+                    <strong>Belief:</strong> {belief.belief}
+                  </p>
+                  <p>
+                    <strong>Justification:</strong> {belief.justification}
+                  </p>
+                  <p>
+                    <strong>Confidence:</strong> {belief.confidence}
+                  </p>
+                  <p>
+                    <strong>Importance:</strong> {belief.importance}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <div>
+              <h2 className="text-xl font-bold">Mainstream Beliefs</h2>
+              {apiData.mainstream_beliefs.map((belief, index) => (
+                <div key={index} className="mt-2">
+                  <p>
+                    <strong>Belief:</strong> {belief.belief}
+                  </p>
+                  <p>
+                    <strong>Justification:</strong> {belief.justification}
+                  </p>
+                  <p>
+                    <strong>Confidence:</strong> {belief.confidence}
+                  </p>
+                  <p>
+                    <strong>Importance:</strong> {belief.importance}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <div>
+              <h2 className="text-xl font-bold">Scores</h2>
+              <p>
+                <strong>Based Score:</strong> {apiData.based_score}
+              </p>
+              <p>
+                <strong>Sincerity Score:</strong> {apiData.sincerity_score}
+              </p>
+              <p>
+                <strong>Truthfulness Score:</strong> {apiData.truthfulness_score}
+              </p>
+              <p>
+                <strong>Conspiracy Score:</strong> {apiData.conspiracy_score}
+              </p>
+            </div>
           </div>
         )}
       </div>
-      <CanvasComponent />
+      {/* <CanvasComponent /> */}
     </div>
   );
 }
