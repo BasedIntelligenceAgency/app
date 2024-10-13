@@ -6,6 +6,8 @@ import CanvasComponent from "./CanvasComponent";
 type Credentials = {
   userId: string;
   accessToken: string;
+  refreshToken: string;
+  expiresAt: number;
 };
 
 const STORAGE_KEY = "twitter-oauth-token";
@@ -31,14 +33,39 @@ const CallbackPage: React.FC = () => {
     const code = params.get('code');
     const state = params.get('state');
 
-    console.log("*** code", code);
-    console.log("*** state", state);
-
     if (code && state) {
-      window.location.href = `http://localhost:8787/oauth/callback?code=${code}&state=${state}`;
+      // Exchange the code for an access token
+      fetch(`http://localhost:8787/oauth/callback?code=${code}&state=${state}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.access_token && data.refresh_token) {
+            // Store the credentials securely
+            const credentials: Credentials = {
+              userId: '', // Set the appropriate user ID
+              accessToken: data.access_token,
+              refreshToken: data.refresh_token,
+              expiresAt: Date.now() + data.expires_in * 1000,
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(credentials));
+            console.log("*** credentials", credentials);
+
+            // Redirect the user back to the main page
+            // window.location.href = '/';
+          } else {
+            throw new Error('No access token or refresh token received');
+          }
+        })
+        .catch(error => {
+          console.error('Authentication error:', error);
+          // Handle authentication error (e.g., show an error message)
+          // Redirect the user back to the main page
+          // window.location.href = '/';
+        });
     } else {
       console.error('Missing code or state');
-      // Handle error
+      // Handle error (e.g., show an error message)
+      // Redirect the user back to the main page
+      window.location.href = '/';
     }
   }, []);
 
@@ -118,22 +145,10 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [score, setScore] = useState<number | null>(null);
 
-  const getCredentials = useMemo(() => {
-    return (): Credentials | undefined => {
-      const storedCredentials = localStorage.getItem(STORAGE_KEY);
-      if (storedCredentials) {
-        const parsedCredentials = JSON.parse(storedCredentials);
-        if (parsedCredentials.userId && parsedCredentials.accessToken) {
-          return parsedCredentials;
-        }
-      }
-      return undefined;
-    };
-  }, []);
-
-  const [credentials, setCredentialsData] = useState<Credentials | undefined>(
-    getCredentials()
-  );
+  const [credentials, setCredentialsData] = useState<Credentials | undefined>(() => {
+    const storedCredentials = localStorage.getItem(STORAGE_KEY);
+    return storedCredentials ? JSON.parse(storedCredentials) : undefined;
+  });
 
   const setCredentials = useCallback((credentials: Credentials | undefined): void => {
     if (credentials) {
@@ -144,8 +159,8 @@ export default function App() {
       }
       setCredentialsData(credentials);
     } else {
-      localStorage.removeItem(STORAGE_KEY);
-      setCredentialsData(undefined);
+      // localStorage.removeItem(STORAGE_KEY);
+      // setCredentialsData(undefined);
     }
   }, []);
 
@@ -193,6 +208,10 @@ export default function App() {
     [credentials]
   );
 
+  if (window.location.pathname.includes("/callback")) {
+    return <CallbackPage />;
+  }
+
   if (!credentials) {
     return (
       <div>
@@ -201,9 +220,6 @@ export default function App() {
     );
   }
 
-  if (window.location.pathname === "/callback") {
-    return <CallbackPage />;
-  }
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center">
