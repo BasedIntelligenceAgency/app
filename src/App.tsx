@@ -28,16 +28,23 @@ const LoginPage: React.FC = () => {
 };
 
 const CallbackPage: React.FC = () => {
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get('code');
-    const state = params.get('state');
+  const [error, setError] = useState<string | null>(null);
 
-    if (code && state) {
-      // Exchange the code for an access token
-      fetch(`http://localhost:8787/oauth/callback?code=${code}&state=${state}`)
-        .then(response => response.json())
-        .then(data => {
+  useEffect(() => {
+    const fetchAccessToken = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
+      const state = params.get('state');
+
+      if (code && state) {
+        try {
+          const response = await fetch(`http://localhost:8787/oauth/callback?code=${code}&state=${state}`,
+            {
+              credentials: 'include', // Add this line to include credentials in the request
+            }
+          );
+          const data = await response.json();
+
           if (data.access_token && data.refresh_token) {
             // Store the credentials securely
             const credentials: Credentials = {
@@ -50,24 +57,32 @@ const CallbackPage: React.FC = () => {
             console.log("*** credentials", credentials);
 
             // Redirect the user back to the main page
-            // window.location.href = '/';
+            window.location.href = '/';
           } else {
             throw new Error('No access token or refresh token received');
           }
-        })
-        .catch(error => {
+        } catch (error) {
           console.error('Authentication error:', error);
-          // Handle authentication error (e.g., show an error message)
-          // Redirect the user back to the main page
-          // window.location.href = '/';
-        });
-    } else {
-      console.error('Missing code or state');
-      // Handle error (e.g., show an error message)
-      // Redirect the user back to the main page
-      window.location.href = '/';
-    }
+          setError('Authentication failed. Please try again.');
+        }
+      } else {
+        console.error('Missing code or state');
+        setError('Invalid callback parameters. Please try logging in again.');
+      }
+    };
+
+    fetchAccessToken();
   }, []);
+
+  if (error) {
+    return (
+      <div>
+        <h1>Authentication Error</h1>
+        <p>{error}</p>
+        <a href="/">Go back to the main page</a>
+      </div>
+    );
+  }
 
   return (
     <div>
