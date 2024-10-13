@@ -1,6 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
 import { useCallback, useMemo, useState } from "react";
-import CanvasComponent from "./CanvasComponent";
 
 export function getSupabaseClient() {
   const url = import.meta.env.VITE_SUPABASE_URL;
