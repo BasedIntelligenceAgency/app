@@ -1,69 +1,102 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { createClient } from "@supabase/supabase-js";
-import { useCallback, useMemo, useState } from "react";
-
-export function getSupabaseClient() {
-  const url = import.meta.env.VITE_SUPABASE_URL;
-  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-  console.log("*** url", url);
-  console.log("*** anonKey", anonKey);
-
-  if (!url || !anonKey) {
-    throw new Error("Missing Supabase credentials");
-  }
-
-  return createClient(url, anonKey);
-}
+import React, { useCallback, useEffect, useState } from "react";
 
 type Credentials = {
   userId: string;
+  accessToken: string;
+  refreshToken: string;
+  expiresAt: number;
 };
 
-const STORAGE_KEY = "sb-ypswcnhnviqsfrxzvmqx-auth-token";
+const STORAGE_KEY = "twitter-oauth-token";
 
 const credentialCache: Record<string, Credentials> = {};
 
-interface ApiResponse {
-  tribal_affiliation: string;
-  justification_for_basedness: string;
-  contrarian_beliefs: Array<{
-    belief: string;
-    justification: string;
-    confidence: number;
-    importance: number;
-  }>;
-  mainstream_beliefs: Array<{
-    belief: string;
-    justification: string;
-    confidence: number;
-    importance: number;
-  }>;
-  based_score: number;
-  sincerity_score: number;
-  truthfulness_score: number;
-  conspiracy_score: number;
-}
+const LoginPage: React.FC = () => {
+  const handleLogin = () => {
+    window.location.href = `${import.meta.env.VITE_SERVER_URL}/oauth/request_token`;
+  };
 
-export default function App() {
-  const [apiData, setApiData] = useState<ApiResponse | null>(null);
-  const [loading, setLoading] = useState(false);
+  return (
+    <div>
+      <h1>Login with Twitter</h1>
+      <button onClick={handleLogin}>Log in</button>
+    </div>
+  );
+};
 
-  const getCredentials = useMemo(() => {
-    return (): Credentials | undefined => {
-      const storedCredentials = localStorage.getItem(STORAGE_KEY);
-      if (storedCredentials) {
-        const parsedCredentials = JSON.parse(storedCredentials);
-        if (parsedCredentials.user) {
-          return {
-            userId: parsedCredentials.user.user_metadata.user_name,
-          };
+const CallbackPage: React.FC = () => {
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchAccessToken = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
+      const state = params.get('state');
+
+      if (code && state) {
+        try {
+          const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/oauth/callback?code=${code}&state=${state}`,
+            {
+              credentials: 'include', // Add this line to include credentials in the request
+            }
+          );
+          const data = await response.json();
+
+          if (data.access_token && data.refresh_token) {
+            // Store the credentials securely
+            const credentials: Credentials = {
+              userId: 'shawmakesmagic', // Set the appropriate user ID
+              accessToken: data.access_token,
+              refreshToken: data.refresh_token,
+              expiresAt: Date.now() + data.expires_in * 1000,
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(credentials));
+            console.log("*** credentials", credentials);
+
+            // Redirect the user back to the main page
+            window.location.href = '/';
+          } else {
+            throw new Error('No access token or refresh token received');
+          }
+        } catch (error) {
+          console.error('Authentication error:', error);
+          setError('Authentication failed. Please try again.');
         }
+      } else {
+        console.error('Missing code or state');
+        setError('Invalid callback parameters. Please try logging in again.');
       }
-      return undefined;
     };
+
+    fetchAccessToken();
   }, []);
 
-  const [credentials, setCredentialsData] = useState<Credentials | undefined>(getCredentials());
+  if (error) {
+    return (
+      <div>
+        <h1>Authentication Error</h1>
+        <p>{error}</p>
+        <a href="/">Go back to the main page</a>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <h1>Authenticating...</h1>
+    </div>
+  );
+};
+
+export default function App() {
+  const [data, setData] = useState<Record<string, any>>();
+  const [loading, setLoading] = useState(false);
+
+  const [credentials, setCredentialsData] = useState<Credentials | undefined>(() => {
+    const storedCredentials = localStorage.getItem(STORAGE_KEY);
+    return storedCredentials ? JSON.parse(storedCredentials) : undefined;
+  });
 
   const setCredentials = useCallback((credentials: Credentials | undefined): void => {
     if (credentials) {
@@ -74,86 +107,49 @@ export default function App() {
       }
       setCredentialsData(credentials);
     } else {
-      // TODO: Keep this inactive or it kills our flow
       // localStorage.removeItem(STORAGE_KEY);
       // setCredentialsData(undefined);
     }
   }, []);
 
-  const connectTwitter = useCallback(async () => {
-    const supabase = getSupabaseClient();
-
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: "twitter",
-    });
-
-    if (error) {
-      console.error("Error signing in with Twitter:", error.message);
-      throw error;
-    }
-
-    console.log("*** data", data);
-
-    if ((data as any).user) {
-      const userId = (data as any).user.user_metadata.user_name;
-
-      const result = {
-        userId: userId,
-      };
-
-      setCredentials(result);
-
-      return result;
-    } else {
-      throw new Error("User data not available");
-    }
-  }, [setCredentials]);
-
-  const [inFlight, setInFlight] = useState(false);
-
-  const connect = useCallback(() => {
-    setInFlight(true);
-    connectTwitter()
-      .then((credentials) => {
-        setCredentials(credentials);
-      })
-      .finally(() => {
-        setInFlight(false);
-      });
-  }, [connectTwitter, setCredentials]);
-
   const disconnect = useCallback(async () => {
-    const supabase = getSupabaseClient();
-    await supabase.auth.signOut();
+    localStorage.removeItem(STORAGE_KEY);
     setCredentials(undefined);
+    setData(undefined);
   }, [setCredentials]);
 
   const fetchData = useCallback(
     async (event: { preventDefault: () => void }) => {
+      if(loading) {
+        return;
+      }
       event.preventDefault();
 
-      console.log(credentials);
+      if (!credentials) {
+        throw new Error("User not authenticated");
+      }
 
       setLoading(true);
 
       try {
-        const res = await fetch(import.meta.env.VITE_SERVER_URL + "process", {
+        const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/process`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${credentials.accessToken}`,
           },
+          credentials: 'include',
           body: JSON.stringify({
-            userId: credentials!.userId,
+            userId: credentials.userId || 'shawmakesmagic',
           }),
         });
 
         if (!res.ok) {
-          throw new Error("Failed to process data.");
+          throw new Error("Failed to fetch data.");
         }
 
-        const data: ApiResponse = await res.json();
-        console.log(data);
-        setApiData(data);
+        const data = await res.json();
+        setData(data);
 
         return data;
       } catch (error) {
@@ -165,46 +161,51 @@ export default function App() {
     [credentials]
   );
 
+  if (window.location.pathname.includes("/callback")) {
+    return <CallbackPage />;
+  }
+
+  console.log("*** credentials", credentials);
+  if (!credentials) {
+    return (
+      <div>
+        <LoginPage />
+      </div>
+    );
+  }
+
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center">
-      <h1 className="text-2xl font-bold m-4 mx-auto text-center">Based or Biased</h1>
-      <h2 className="text-lg mb-4 mx-auto text-center">Are you a free thinker or an NPC? Log in to find out.</h2>
-      <div className="mx-auto p-4 w-full flex flex-col items-center justify-center">
-        {credentials && (
-          <button
-            className={`bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded ${
-              loading ? "opacity-50 cursor-not-allowed" : ""
-            }`}
-            onClick={fetchData}
-            disabled={loading}
-          >
-            {loading ? "Loading..." : apiData ? "Fetch Again" : "Fetch Data"}
-          </button>
-        )}
-        {!credentials && (
-          <button
-            className={`bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded ${
-              inFlight ? "opacity-50 cursor-not-allowed" : ""
-            }`}
-            onClick={credentials ? disconnect : connect}
-            disabled={inFlight}
-          >
-            {credentials ? "Disconnect Twitter" : "Connect Twitter"}
-          </button>
-        )}
-        {apiData && (
+    <div className="min-h-screen flex flex-col justify-center items-center">
+      <div className="max-w-sm w-full px-4">
+        <button
+          className={`bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded ${
+            loading ? "opacity-50 cursor-not-allowed" : ""
+          }`}
+          onClick={fetchData}
+          disabled={loading}
+        >
+          {loading ? "Loading..." : data ? "Fetch Again" : "Fetch Data"}
+        </button>
+        <button
+          className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded ml-4"
+          onClick={disconnect}
+        >
+          Disconnect Twitter
+        </button>
+      </div>
+      {data && (
           <div className="mt-4 space-y-4 flex flex-col items-center text-center">
             <div>
               <h2 className="text-xl font-bold">Tribal Affiliation</h2>
-              <p>{apiData.tribal_affiliation}</p>
+              <p>{data.tribal_affiliation}</p>
             </div>
             <div>
               <h2 className="text-xl font-bold">Justification for Basedness</h2>
-              <p>{apiData.justification_for_basedness}</p>
+              <p>{data.justification_for_basedness}</p>
             </div>
             <div>
               <h2 className="text-xl font-bold">Contrarian Beliefs</h2>
-              {apiData.contrarian_beliefs.map((belief, index) => (
+              {data.contrarian_beliefs.map((belief: { belief: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; justification: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; confidence: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; importance: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; }, index: React.Key | null | undefined) => (
                 <div key={index} className="mt-2">
                   <p>
                     <strong>Belief:</strong> {belief.belief}
@@ -223,7 +224,7 @@ export default function App() {
             </div>
             <div>
               <h2 className="text-xl font-bold">Mainstream Beliefs</h2>
-              {apiData.mainstream_beliefs.map((belief, index) => (
+              {data.mainstream_beliefs.map((belief: { belief: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; justification: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; confidence: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; importance: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; }, index: React.Key | null | undefined) => (
                 <div key={index} className="mt-2">
                   <p>
                     <strong>Belief:</strong> {belief.belief}
@@ -243,22 +244,20 @@ export default function App() {
             <div>
               <h2 className="text-xl font-bold">Scores</h2>
               <p>
-                <strong>Based Score:</strong> {apiData.based_score}
+                <strong>Based Score:</strong> {data.based_score}
               </p>
               <p>
-                <strong>Sincerity Score:</strong> {apiData.sincerity_score}
+                <strong>Sincerity Score:</strong> {data.sincerity_score}
               </p>
               <p>
-                <strong>Truthfulness Score:</strong> {apiData.truthfulness_score}
+                <strong>Truthfulness Score:</strong> {data.truthfulness_score}
               </p>
               <p>
-                <strong>Conspiracy Score:</strong> {apiData.conspiracy_score}
+                <strong>Conspiracy Score:</strong> {data.conspiracy_score}
               </p>
             </div>
           </div>
         )}
-      </div>
-      {/* <CanvasComponent /> */}
     </div>
   );
 }
