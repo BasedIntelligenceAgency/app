@@ -28,21 +28,18 @@ const LoginPage: React.FC = () => {
 const CallbackPage: React.FC = () => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const oauthToken = params.get('oauth_token');
-    const oauthVerifier = params.get('oauth_verifier');
+    const code = params.get('code');
+    const state = params.get('state');
 
-    axios.post('http://localhost:8787/oauth/callback', { oauthToken, oauthVerifier })
-      .then(response => {
-        const { accessToken } = response.data;
-        // Store the access token securely
-        localStorage.setItem('twitter_access_token', accessToken);
-        // Redirect the user to the authenticated area
-        window.location.href = '/dashboard';
-      })
-      .catch(error => {
-        console.error('Authentication error:', error);
-        // Handle authentication error
-      });
+    console.log("*** code", code);
+    console.log("*** state", state);
+
+    if (code && state) {
+      window.location.href = `http://localhost:8787/oauth/callback?code=${code}&state=${state}`;
+    } else {
+      console.error('Missing code or state');
+      // Handle error
+    }
   }, []);
 
   return (
