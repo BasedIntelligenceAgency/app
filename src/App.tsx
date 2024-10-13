@@ -85,9 +85,6 @@ export default function App() {
 
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "twitter",
-      options: {
-        redirectTo: "http://localhost:5173",
-      },
     });
 
     if (error) {
