@@ -1,50 +1,53 @@
-# React + TypeScript + Vite
+# Based or Biased
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A Twitter-based personality analysis app that determines if you're based or biased.
 
-Currently, two official plugins are available:
+## Images
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+The app uses the following images from the `/lovable-uploads/` directory:
 
-## Expanding the ESLint configuration
+1. Grey/Chad Wojak: `/lovable-uploads/de2c843b-c6a6-41e9-a60b-59afd80be163.png`
+   - Used for both the grey wojak and chad (flipped horizontally)
+2. White Wojak: `/lovable-uploads/80766027-5ef1-432a-9f7c-69457750b3cd.png`
+   - Used for the analyzing state
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+## Environment Setup
 
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+1. Copy `.env.default` to `.env` and fill in the required values:
+```
+VITE_SERVER_URL=http://localhost:8787
+VITE_TWITTER_CLIENT_ID=your_twitter_client_id
+XAI_API_KEY=your_xai_api_key
+TWITTER_BEARER_TOKEN=your_twitter_bearer_token
+SUPABASE_URL=your_supabase_url
+SUPABASE_KEY=your_supabase_key
+FRONTEND_URL=http://localhost:5173
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
-
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
-
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+2. Install dependencies:
+```bash
+npm install
 ```
+
+3. Start the development server:
+```bash
+npm run dev
+```
+
+## Features
+
+- Twitter OAuth integration
+- Real-time tweet analysis
+- Personality trait scoring
+- Based vs Biased calculation
+- Modern UI with wojak themes
+
+## Development
+
+The app is built with:
+- React + TypeScript
+- Vite
+- Tailwind CSS
+- Twitter OAuth
+- X.ai API integration
+- Supabase for token storage
