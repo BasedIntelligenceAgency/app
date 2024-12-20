@@ -1,10 +1,10 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useOAuth } from '../hooks/useOAuth';
 
 export default function CallbackPage() {
   const [searchParams] = useSearchParams();
-  const { handleCallback, error, isLoading } = useOAuth();
+  const { handleCallback, error } = useOAuth();
 
   useEffect(() => {
     const code = searchParams.get('code');

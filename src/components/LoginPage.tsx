@@ -1,4 +1,3 @@
-import React from 'react';
 import { useOAuth } from '../hooks/useOAuth';
 
 export default function LoginPage() {
