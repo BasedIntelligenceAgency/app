@@ -34,6 +34,9 @@ const CallbackPage: React.FC = () => {
       const code = params.get('code');
       const state = params.get('state');
 
+      console.log("code", code);
+      console.log("state", state);
+
       if (code && state) {
         try {
           const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/oauth/callback?code=${code}&state=${state}`,
@@ -43,10 +46,12 @@ const CallbackPage: React.FC = () => {
           );
           const data = await response.json();
 
+          console.log("data", data);
+
           if (data.access_token && data.refresh_token) {
             // Store the credentials securely
             const credentials: Credentials = {
-              userId: 'shawmakesmagic', // Set the appropriate user ID
+              userId: data.userId || 'shawmakesmagic', // Set the appropriate user ID
               accessToken: data.access_token,
               refreshToken: data.refresh_token,
               expiresAt: Date.now() + data.expires_in * 1000,
@@ -124,33 +129,32 @@ export default function App() {
         return;
       }
       event.preventDefault();
-
+  
       if (!credentials) {
         throw new Error("User not authenticated");
       }
-
+  
       setLoading(true);
-
+  
       try {
         const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/process`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${credentials.accessToken}`,
+            "Authorization": `Bearer ${credentials.accessToken}` // Using user's access token
           },
           credentials: 'include',
           body: JSON.stringify({
-            userId: credentials.userId || 'shawmakesmagic',
+            userId: credentials.userId
           }),
         });
-
+  
         if (!res.ok) {
           throw new Error("Failed to fetch data.");
         }
-
+  
         const data = await res.json();
         setData(data);
-
         return data;
       } catch (error) {
         console.error(error);
@@ -158,7 +162,7 @@ export default function App() {
         setLoading(false);
       }
     },
-    [credentials]
+    [credentials, loading]
   );
 
   if (window.location.pathname.includes("/callback")) {
