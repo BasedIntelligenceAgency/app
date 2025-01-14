@@ -1,18 +1,15 @@
-import { Credentials } from "./App";
-import { Shareable } from "./Shareable";
 import LoadingMessages from "./LoadingMessages";
+import { ComboChart } from "./components/ComboChart";
+import { PolarAreaChart } from "./components/PolarAreaChart";
+import { RadarChart } from "./components/RadarChart";
 
 export function BasedView({
   loading,
   data,
-  credentials,
-  fetchData,
   disconnect,
 }: {
   loading: boolean;
   data: Record<string, any> | undefined;
-  credentials: Credentials;
-  fetchData: (event: { preventDefault: () => void }) => Promise<any>;
   disconnect: () => void;
 }) {
   return (
@@ -31,76 +28,83 @@ export function BasedView({
           <LoadingMessages />
         </div>
       ) : data ? (
-        <div className="space-y-8">
-          {/* Radar Chart */}
-          <div className="border-2 border-white p-6 rounded-lg">
-            <h2 className="text-2xl font-bold mb-4 text-center">
-              Political Compass
-            </h2>
-            <Shareable data={data} credentials={credentials} />
-          </div>
-
-          {/* Data Display */}
-          <div className="border-2 border-white p-6 rounded-lg">
-            <div>
-              <h2 className="text-xl font-bold">Tribal Affiliation</h2>
-              <p className="mt-2">{data.tribal_affiliation}</p>
+        <div className="min-h-screen flex flex-col justify-center items-center">
+          <div className="mt-4 space-y-8 flex flex-col items-center text-center w-full max-w-4xl px-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
+              <PolarAreaChart scores={data as any} />
+              <RadarChart
+                contrarian_beliefs={data.contrarian_beliefs}
+                mainstream_beliefs={data.mainstream_beliefs}
+              />
+              <ComboChart
+                contrarian_beliefs={data.contrarian_beliefs}
+                mainstream_beliefs={data.mainstream_beliefs}
+              />
             </div>
-
-            <div>
-              <h2 className="text-xl font-bold">
-                Justification for Basedness
-              </h2>
-              <p className="mt-2">{data.justification_for_basedness}</p>
-            </div>
-
-            <div>
-              <h2 className="text-xl font-bold">Contrarian Beliefs</h2>
-              <div className="space-y-4 mt-2">
-                {data.contrarian_beliefs.map((belief: any, index: number) => (
-                  <div key={index}>
-                    <p>
-                      <strong>Belief:</strong> {belief.belief}
-                    </p>
-                    <p>
-                      <strong>Justification:</strong> {belief.justification}
-                    </p>
-                    <p>
-                      <strong>Confidence:</strong> {belief.confidence}
-                    </p>
-                    <p>
-                      <strong>Importance:</strong> {belief.importance}
-                    </p>
-                  </div>
-                ))}
+  
+            <div className="mt-4 space-y-4 flex flex-col items-center text-center">
+              <div>
+                <h2 className="text-xl font-bold">Tribal Affiliation</h2>
+                <p>{data.tribal_affiliation}</p>
               </div>
-            </div>
-
-            <div>
-              <h2 className="text-xl font-bold">Mainstream Beliefs</h2>
-              <div className="space-y-4 mt-2">
-                {data.mainstream_beliefs.map((belief: any, index: number) => (
-                  <div key={index}>
-                    <p>
-                      <strong>Belief:</strong> {belief.belief}
-                    </p>
-                    <p>
-                      <strong>Justification:</strong> {belief.justification}
-                    </p>
-                    <p>
-                      <strong>Confidence:</strong> {belief.confidence}
-                    </p>
-                    <p>
-                      <strong>Importance:</strong> {belief.importance}
-                    </p>
-                  </div>
-                ))}
+              <div>
+                <h2 className="text-xl font-bold">Justification for Basedness</h2>
+                <p>{data.justification_for_basedness}</p>
               </div>
-            </div>
-
-            <div>
-              <h2 className="text-xl font-bold">Scores</h2>
-              <div className="grid grid-cols-2 gap-4 mt-2">
+              <div>
+                <h2 className="text-xl font-bold">Contrarian Beliefs</h2>
+                {data.contrarian_beliefs.map(
+                  (belief: {
+                    belief: string;
+                    justification: string;
+                    confidence: string | number;
+                    importance: string | number;
+                  }, index: number) => (
+                    <div key={index} className="mt-2">
+                      <p>
+                        <strong>Belief:</strong> {belief.belief}
+                      </p>
+                      <p>
+                        <strong>Justification:</strong> {belief.justification}
+                      </p>
+                      <p>
+                        <strong>Confidence:</strong> {belief.confidence}
+                      </p>
+                      <p>
+                        <strong>Importance:</strong> {belief.importance}
+                      </p>
+                    </div>
+                  )
+                )}
+              </div>
+              <div>
+                <h2 className="text-xl font-bold">Mainstream Beliefs</h2>
+                {data.mainstream_beliefs.map(
+                  (belief: {
+                    belief: string;
+                    justification: string;
+                    confidence: string | number;
+                    importance: string | number;
+                  }, index: number) => (
+                    <div key={index} className="mt-2">
+                      <p>
+                        <strong>Belief:</strong> {belief.belief}
+                      </p>
+                      <p>
+                        <strong>Justification:</strong> {belief.justification}
+                      </p>
+                      <p>
+                        <strong>Confidence:</strong> {belief.confidence}
+                      </p>
+                      <p>
+                        <strong>Importance:</strong> {belief.importance}
+                      </p>
+                    </div>
+                  )
+                )}
+              </div>
+              <div>
+                <h2 className="text-xl font-bold">Scores</h2>
                 <p>
                   <strong>Based Score:</strong> {data.based_score}
                 </p>
@@ -108,8 +112,7 @@ export function BasedView({
                   <strong>Sincerity Score:</strong> {data.sincerity_score}
                 </p>
                 <p>
-                  <strong>Truthfulness Score:</strong>{" "}
-                  {data.truthfulness_score}
+                  <strong>Truthfulness Score:</strong> {data.truthfulness_score}
                 </p>
                 <p>
                   <strong>Conspiracy Score:</strong> {data.conspiracy_score}
@@ -120,12 +123,7 @@ export function BasedView({
         </div>
       ) : (
         <div className="flex items-center justify-center min-h-[60vh]">
-          <button
-            onClick={fetchData}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
-          >
-            Analyze My Profile
-          </button>
+          <LoadingMessages />
         </div>
       )}
     </div>

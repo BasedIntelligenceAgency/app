@@ -14,10 +14,14 @@ export type Credentials = {
 };
 
 const STORAGE_KEY = "twitter-oauth-token";
+const DATA_STORAGE_KEY = "user-based-data";
 const credentialCache: Record<string, Credentials> = {};
 
 export default function App() {
-  const [data, setData] = useState<Record<string, any>>();
+  const [data, setData] = useState<Record<string, any>>(() => {
+    const storedData = localStorage.getItem(DATA_STORAGE_KEY);
+    return storedData ? JSON.parse(storedData) : undefined;
+  });
   const [loading, setLoading] = useState(false);
   const [credentials, setCredentialsData] = useState<Credentials | undefined>(() => {
     const storedCredentials = localStorage.getItem(STORAGE_KEY);
@@ -40,11 +44,11 @@ export default function App() {
 
   const disconnect = useCallback(async () => {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(DATA_STORAGE_KEY);
     setCredentials(undefined);
     setData(undefined);
     window.location.href = "/";
   }, [setCredentials]);
-
 
   const fetchData = useCallback(async () => {
     if (loading || !credentials) return;
@@ -70,6 +74,7 @@ export default function App() {
 
       const responseData = await res.json();
       setData(responseData);
+      localStorage.setItem(DATA_STORAGE_KEY, JSON.stringify(responseData));
       return responseData;
     } catch (error) {
       console.error(error);
@@ -78,18 +83,20 @@ export default function App() {
     }
   }, [credentials, loading]);
 
-  // Auto-fetch data when credentials are present and we have a fresh authentication
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const isFreshAuth = params.get('fresh_auth') === 'true';
     
-    if (credentials && isFreshAuth) {
-      // Clean up the URL
-      window.history.replaceState({}, '', '/');
+    // Only fetch if we don't have data or if it's a fresh authentication
+    if (credentials && (isFreshAuth || !data)) {
+      // Clean up the URL if it's a fresh auth
+      if (isFreshAuth) {
+        window.history.replaceState({}, '', '/');
+      }
       // Fetch data automatically
       fetchData();
     }
-  }, [credentials, fetchData]);
+  }, [credentials, fetchData, data]);
 
   if (window.location.pathname.includes("/callback")) {
     return <CallbackPage />;
@@ -105,7 +112,6 @@ export default function App() {
         loading={loading}
         data={data}
         credentials={credentials}
-        fetchData={fetchData}
         disconnect={disconnect}
       />
     </div>
