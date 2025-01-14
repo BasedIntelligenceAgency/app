@@ -113,9 +113,7 @@ export const Shareable: React.FC<ShareableProps> = ({ data, credentials }) => {
   Truthfulness Score: ${data.truthfulness_score}%
   Conspiracy Score: ${data.conspiracy_score}%
   
-  Tribal Affiliation: ${data.tribal_affiliation}
-  
-  #BasedOrBiased`;
+  Tribal Affiliation: ${data.tribal_affiliation}`;
 
   const handleShare = async () => {
     if (!chartRef.current || isSharing) return;
@@ -189,16 +187,15 @@ export const Shareable: React.FC<ShareableProps> = ({ data, credentials }) => {
       <button
         onClick={handleShare}
         disabled={isSharing}
-        className={`bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded
+        className={`bg-white text-black font-bold py-2 px-4 rounded
             ${isSharing ? "opacity-50 cursor-not-allowed" : ""}`}
       >
-        {isSharing ? "Preparing..." : "Share on Twitter"}
+        {isSharing ? "Preparing..." : "Share on X"}
       </button>
 
       <ComposeDialog
         isOpen={showComposeDialog}
         onClose={() => setShowComposeDialog(false)}
-        mediaId={uploadedMediaId}
         defaultText={defaultTweet}
         onTweet={handleTweet}
       />

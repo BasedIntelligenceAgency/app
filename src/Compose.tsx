@@ -3,7 +3,6 @@ import { useState, useCallback, useEffect } from 'react';
 interface ComposeDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  mediaId?: string;
   defaultText: string;
   onTweet: (text: string) => Promise<void>;
 }
@@ -13,7 +12,6 @@ const MAX_CHARS = 280;
 export const ComposeDialog: React.FC<ComposeDialogProps> = ({ 
   isOpen, 
   onClose, 
-  mediaId, 
   defaultText,
   onTweet 
 }) => {
@@ -67,19 +65,19 @@ export const ComposeDialog: React.FC<ComposeDialogProps> = ({
       {/* Dialog */}
       <div className="fixed inset-0 flex items-center justify-center p-4">
         <div 
-          className="bg-white rounded-xl w-[600px] max-w-full relative"
+          className="bg-black rounded-xl border-white border w-[600px] max-w-full relative"
           onClick={e => e.stopPropagation()}
         >
           {/* Header */}
           <div className="flex justify-between items-center p-4 border-b">
             <button 
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-2 rounded-full h-12 w-12"
             >
               ✕
             </button>
             <span className="font-bold">
-              {mediaId ? 'Post with media' : 'Compose post'}
+              {'Post on X'}
             </span>
             <div className="w-8" />
           </div>
@@ -90,15 +88,9 @@ export const ComposeDialog: React.FC<ComposeDialogProps> = ({
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder="What's happening?"
-              className="w-full min-h-[150px] resize-none border-0 focus:outline-none text-xl"
+              className="w-full min-h-[250px] resize-none border-0 focus:outline-none text-xl"
               disabled={isPosting}
             />
-            
-            {mediaId && (
-              <div className="mt-4 border rounded-xl p-2 bg-gray-50">
-                <div className="text-sm text-gray-500">Media attached</div>
-              </div>
-            )}
           </div>
 
           {/* Footer */}
