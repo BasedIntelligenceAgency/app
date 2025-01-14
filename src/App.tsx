@@ -104,14 +104,12 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center p-4">
-      <BasedView
-        loading={loading}
-        data={data}
-        credentials={credentials}
-        fetchData={fetchData}
-        disconnect={disconnect}
-      />
-    </div>
+    <BasedView
+      loading={loading}
+      data={data}
+      credentials={credentials}
+      fetchData={fetchData}
+      disconnect={disconnect}
+    />
   );
 }
