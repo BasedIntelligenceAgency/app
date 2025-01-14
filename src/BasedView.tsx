@@ -1,14 +1,18 @@
 import { Credentials } from "./App";
 import { Shareable } from "./Shareable";
-
+import LoadingMessages from "./LoadingMessages";
 
 export function BasedView({
-  loading, data, credentials, fetchData, disconnect,
+  loading,
+  data,
+  credentials,
+  fetchData,
+  disconnect,
 }: {
   loading: boolean;
   data: Record<string, any> | undefined;
   credentials: Credentials;
-  fetchData: (event: { preventDefault: () => void; }) => Promise<any>;
+  fetchData: (event: { preventDefault: () => void }) => Promise<any>;
   disconnect: () => void;
 }) {
   return (
@@ -22,7 +26,11 @@ export function BasedView({
         </button>
       </div>
 
-      {data && (
+      {loading ? (
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <LoadingMessages />
+        </div>
+      ) : data ? (
         <div className="space-y-8">
           {/* Radar Chart */}
           <div className="border-2 border-white p-6 rounded-lg">
@@ -109,6 +117,15 @@ export function BasedView({
               </div>
             </div>
           </div>
+        </div>
+      ) : (
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <button
+            onClick={fetchData}
+            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+          >
+            Analyze My Profile
+          </button>
         </div>
       )}
     </div>
