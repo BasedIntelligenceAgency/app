@@ -17,10 +17,12 @@ export default function App() {
     return storedData ? JSON.parse(storedData) : undefined;
   });
   const [loading, setLoading] = useState(false);
-  const [credentials, setCredentialsData] = useState<Credentials | undefined>(() => {
-    const storedCredentials = localStorage.getItem(STORAGE_KEY);
-    return storedCredentials ? JSON.parse(storedCredentials) : undefined;
-  });
+  const [credentials, setCredentialsData] = useState<Credentials | undefined>(
+    () => {
+      const storedCredentials = localStorage.getItem(STORAGE_KEY);
+      return storedCredentials ? JSON.parse(storedCredentials) : undefined;
+    }
+  );
 
   const setCredentials = useCallback(
     (credentials: Credentials | undefined): void => {
@@ -45,11 +47,13 @@ export default function App() {
   }, [setCredentials]);
 
   const fetchData = useCallback(async () => {
+    console.log("> fetchData called here", credentials);
     if (loading || !credentials) return;
 
     setLoading(true);
 
     try {
+      console.log("> fetchData called here", credentials);
       const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/process`, {
         method: "POST",
         headers: {
@@ -79,18 +83,23 @@ export default function App() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const isFreshAuth = params.get('fresh_auth') === 'true';
-    
+    const isFreshAuth = params.get("fresh_auth") === "true";
+
     // Only fetch if we don't have data or if it's a fresh authentication
     if (credentials && (isFreshAuth || !data)) {
       // Clean up the URL if it's a fresh auth
       if (isFreshAuth) {
-        window.history.replaceState({}, '', '/');
+        window.history.replaceState({}, "", "/");
       }
       // Fetch data automatically
+      console.log("> get called here");
       fetchData();
     }
   }, [credentials, fetchData, data]);
+
+  if (loading) {
+    return <Loading />;
+  }
 
   if (window.location.pathname.includes("/callback")) {
     return <CallbackPage />;
@@ -101,13 +110,12 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center p-4">
-      <BasedView
-        loading={loading}
-        data={data}
-        credentials={credentials}
-        disconnect={disconnect}
-      />
-    </div>
+    <BasedView
+      loading={loading}
+      data={data}
+      credentials={credentials}
+      fetchData={fetchData}
+      disconnect={disconnect}
+    />
   );
 }
