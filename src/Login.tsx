@@ -20,8 +20,18 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative">
-      <div className="items-center flex flex-col justify-center rounded-lg mx-auto w-full md:w-2/3 p-4 gap-6">
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
+      <video
+        autoPlay
+        muted
+        loop
+        playsInline
+        className="absolute w-full h-full object-cover z-0"
+      >
+        <source src="/video/HomeScreenSmall.mp4" type="video/mp4" />
+      </video>
+
+      <div className="items-center flex flex-col justify-center rounded-lg mx-auto w-full md:w-2/3 p-4 gap-6 relative z-10 bg-black/10">
         <h1 className="font-mono font-bold tracking-tighter-custom text-[48px] md:text-[72px] text-center text-[#00FF04]">
           Discover How Based You Really Are
         </h1>
@@ -37,7 +47,7 @@ export const LoginPage: React.FC = () => {
         </button>
       </div>
 
-      <div className="absolute bottom-0 left-0 w-full flex justify-center items-center pb-4 px-2">
+      <div className="absolute bottom-0 left-0 w-full flex justify-center items-center pb-4 px-2 z-10">
         <img src={cubeFive} alt="Blue-Hair SJW Snowflake" className="w-8 h-8" />
         <div className="overflow-hidden relative w-full md:w-[1300px]">
           <p className="flex items-center mx-2 text-[#00FF04] text-sm whitespace-nowrap animate-scroll">
