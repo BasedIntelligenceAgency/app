@@ -17,8 +17,6 @@ export function BasedView({
 }) {
   const [menu, setMenu] = useState(0);
 
-  console.log("data", data);
-
   return (
     <div className="min-h-screen flex items-center justify-center relative p-4 flex-col">
       <div className="fixed bottom-4 right-4 z-20">
