@@ -2,9 +2,11 @@ import { Tweet } from "react-tweet";
 
 export default function BasedVsBiased() {
   return (
-    <div className="flex flex-col items-center justify-center">
-      <h1 className="text-[60px] text-[#00FF04] mb-8">Based vs Biased</h1>
-      <div className="flex flex-row items-center justify-center gap-4">
+    <div className="flex flex-col items-center justify-center mt-12">
+      <h1 className="text-[60px] md:text-[60px] text-[40px] text-[#00FF04] mb-8">
+        Based vs Biased
+      </h1>
+      <div className="flex flex-col md:flex-row items-center justify-center gap-4 max-w-[100vw] px-4">
         <TweetCard tweet="1878894390581805335" theme="based" />
         <TweetCard tweet="1878997650638541286" theme="biased" />
       </div>
@@ -13,15 +15,15 @@ export default function BasedVsBiased() {
 }
 
 const TweetCard = (props: { tweet: string; theme: "biased" | "based" }) => (
-  <div className="flex flex-col items-center justify-center">
+  <div className="flex flex-col items-center justify-center w-full md:w-auto">
     <div
-      className={`max-w-[500px] flex flex-col items-center justify-center gap-1 ${
+      className={`w-full md:max-w-[500px] flex flex-col items-center justify-center gap-1 ${
         props.theme === "based"
           ? "bg-gradient-to-b from-[#092F0E] to-black"
           : "bg-[#171717]"
       } rounded-lg p-4`}
     >
-      <div className="flex flex-row items-center justify-between gap-4 w-full font-bold text-[1.25em]">
+      <div className="flex flex-row items-center justify-between gap-4 w-full font-bold text-[1em] md:text-[1.25em]">
         <h2>Your Most {props.theme === "based" ? "Based" : "Biased"} Tweet</h2>
         <img
           src="/images/random-dots.svg"

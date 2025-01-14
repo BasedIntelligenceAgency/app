@@ -25,7 +25,7 @@ export function BasedView({
 
   return (
     <div className="min-h-screen flex items-center justify-center relative p-4 flex-col">
-      <div className="fixed bottom-4 right-4 z-12">
+      <div className="fixed bottom-4 right-4 z-20">
         <button
           className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
           onClick={disconnect}
@@ -47,6 +47,18 @@ export function BasedView({
       )}
       {menu === 1 && <SpiderWebCategories />}
       {menu === 3 && <BasedVsBiased />}
+      {menu === 4 && (
+        <OverviewElement
+          name={"BLABLA123"}
+          username={"BLABLA123"}
+          tweets={1234}
+          description={
+            "MAGA Facebook Uncle (Progressive vs Conservative values, complete opposite social views)"
+          }
+          image="https://thumbs.dreamstime.com/b/grinning-man-fedora-hat-28126280.jpg"
+          mode="nemsis"
+        />
+      )}
     </div>
   );
 }
