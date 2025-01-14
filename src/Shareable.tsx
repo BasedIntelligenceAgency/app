@@ -9,6 +9,7 @@ import {
 } from "chart.js";
 import React, { useEffect, useRef, useState } from "react";
 import { ComposeDialog } from "./Compose";
+import { Credentials } from "./types";
   
   // Register Chart.js components
   ChartJS.register(
@@ -25,13 +26,6 @@ interface ShareableProps {
   data: any;
   credentials: Credentials;
 }
-
-type Credentials = {
-  userId: string;
-  accessToken: string;
-  refreshToken: string;
-  expiresAt: number;
-};
 
 export const Shareable: React.FC<ShareableProps> = ({ data, credentials }) => {
   const [isSharing, setIsSharing] = useState(false);

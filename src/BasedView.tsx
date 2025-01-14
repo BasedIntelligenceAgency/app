@@ -1,15 +1,16 @@
 import LoadingMessages from "./LoadingMessages";
-import { ComboChart } from "./components/ComboChart";
-import { PolarAreaChart } from "./components/PolarAreaChart";
-import { RadarChart } from "./components/RadarChart";
+import { Shareable } from "./Shareable";
+import { Credentials } from "./types";
 
 export function BasedView({
   loading,
   data,
+  credentials,
   disconnect,
 }: {
   loading: boolean;
   data: Record<string, any> | undefined;
+  credentials: Credentials;
   disconnect: () => void;
 }) {
   return (
@@ -31,15 +32,7 @@ export function BasedView({
         <div className="min-h-screen flex flex-col justify-center items-center">
           <div className="mt-4 space-y-8 flex flex-col items-center text-center w-full max-w-4xl px-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
-              <PolarAreaChart scores={data as any} />
-              <RadarChart
-                contrarian_beliefs={data.contrarian_beliefs}
-                mainstream_beliefs={data.mainstream_beliefs}
-              />
-              <ComboChart
-                contrarian_beliefs={data.contrarian_beliefs}
-                mainstream_beliefs={data.mainstream_beliefs}
-              />
+              <Shareable data={data} credentials={credentials} />
             </div>
   
             <div className="mt-4 space-y-4 flex flex-col items-center text-center">

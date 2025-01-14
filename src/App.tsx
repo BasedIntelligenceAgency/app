@@ -5,13 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { CallbackPage } from "./CallbackPage";
 import { LoginPage } from "./Login";
 import { BasedView } from "./BasedView";
-
-export type Credentials = {
-  userId: string;
-  accessToken: string;
-  refreshToken: string;
-  expiresAt: number;
-};
+import { Credentials } from "./types";
 
 const STORAGE_KEY = "twitter-oauth-token";
 const DATA_STORAGE_KEY = "user-based-data";
