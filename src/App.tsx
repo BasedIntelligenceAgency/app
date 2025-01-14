@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { CallbackPage } from "./CallbackPage";
 import { LoginPage } from "./Login";
 import { BasedView } from "./BasedView";
+import Loading from "./Loading";
 
 export type Credentials = {
   userId: string;
@@ -94,6 +95,10 @@ export default function App() {
       fetchData();
     }
   }, [credentials, fetchData]);
+
+  if (loading) {
+    return <Loading />;
+  }
 
   if (window.location.pathname.includes("/callback")) {
     return <CallbackPage />;

@@ -1,4 +1,4 @@
-import React from "react";
+import { useEffect } from "react";
 import { useMediaQuery } from "react-responsive";
 
 interface SwitchProps {
@@ -20,9 +20,22 @@ export default function Switch(props: SwitchProps) {
     props.setState((props.state - 1 + 5) % 5);
   };
 
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.key === "ArrowRight") {
+        handleNext();
+      } else if (event.key === "ArrowLeft") {
+        handlePrev();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, [props.state]); // Add state as dependency since handlers use it
+
   return (
     <>
-      <div className="relative flex items-center justify-center w-full">
+      <div className="absolute top-0 md:top-20% flex items-center justify-center w-full">
         <div className="flex gap-2 py-10 items-center">
           {isDesktop && (
             <button
