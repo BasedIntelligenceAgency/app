@@ -6,10 +6,7 @@ import SpiderWebCategories from "./SpiderWebCategories";
 import BasedVsBiased from "./BasedVsBiased";
 
 export function BasedView({
-  loading,
   data,
-  credentials,
-  fetchData,
   disconnect,
 }: {
   loading: boolean;
