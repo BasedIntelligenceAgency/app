@@ -19,10 +19,12 @@ const credentialCache: Record<string, Credentials> = {};
 export default function App() {
   const [data, setData] = useState<Record<string, any>>();
   const [loading, setLoading] = useState(false);
-  const [credentials, setCredentialsData] = useState<Credentials | undefined>(() => {
-    const storedCredentials = localStorage.getItem(STORAGE_KEY);
-    return storedCredentials ? JSON.parse(storedCredentials) : undefined;
-  });
+  const [credentials, setCredentialsData] = useState<Credentials | undefined>(
+    () => {
+      const storedCredentials = localStorage.getItem(STORAGE_KEY);
+      return storedCredentials ? JSON.parse(storedCredentials) : undefined;
+    }
+  );
 
   const setCredentials = useCallback(
     (credentials: Credentials | undefined): void => {
@@ -45,13 +47,14 @@ export default function App() {
     window.location.href = "/";
   }, [setCredentials]);
 
-
   const fetchData = useCallback(async () => {
+    console.log("> fetchData called here", credentials);
     if (loading || !credentials) return;
 
     setLoading(true);
 
     try {
+      console.log("> fetchData called here", credentials);
       const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/process`, {
         method: "POST",
         headers: {
@@ -81,12 +84,13 @@ export default function App() {
   // Auto-fetch data when credentials are present and we have a fresh authentication
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const isFreshAuth = params.get('fresh_auth') === 'true';
-    
+    const isFreshAuth = params.get("fresh_auth") === "true";
+
     if (credentials && isFreshAuth) {
       // Clean up the URL
-      window.history.replaceState({}, '', '/');
+      window.history.replaceState({}, "", "/");
       // Fetch data automatically
+      console.log("> get called here");
       fetchData();
     }
   }, [credentials, fetchData]);
