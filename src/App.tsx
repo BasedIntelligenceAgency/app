@@ -40,7 +40,7 @@ export default function App() {
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(DATA_STORAGE_KEY);
     setCredentials(undefined);
-    setData(undefined);
+    setData({});
     window.location.href = "/";
   }, [setCredentials]);
 
