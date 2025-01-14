@@ -12,20 +12,13 @@ export function BasedView({
   disconnect: () => void;
 }) {
   return (
-    <div className="max-w-4xl w-full space-y-8">
-      <div className="flex justify-center space-x-4">
-        {/* <button
-          className={`bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
-          onClick={fetchData}
-          disabled={loading}
-        >
-          {loading ? "Loading..." : data ? "Fetch Again" : "Fetch Data"}
-        </button> */}
+    <div className="h-full w-full space-y-8">
+      <div className="flex justify-end space-x-4">
         <button
           className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
           onClick={disconnect}
         >
-          Disconnect Twitter
+          Log Out
         </button>
       </div>
 
@@ -57,7 +50,7 @@ export function BasedView({
               <h2 className="text-xl font-bold">Contrarian Beliefs</h2>
               <div className="space-y-4 mt-2">
                 {data.contrarian_beliefs.map((belief: any, index: number) => (
-                  <div key={index} className="bg-gray-50 p-4 rounded">
+                  <div key={index}>
                     <p>
                       <strong>Belief:</strong> {belief.belief}
                     </p>
@@ -79,7 +72,7 @@ export function BasedView({
               <h2 className="text-xl font-bold">Mainstream Beliefs</h2>
               <div className="space-y-4 mt-2">
                 {data.mainstream_beliefs.map((belief: any, index: number) => (
-                  <div key={index} className="bg-gray-50 p-4 rounded">
+                  <div key={index}>
                     <p>
                       <strong>Belief:</strong> {belief.belief}
                     </p>

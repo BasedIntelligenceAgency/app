@@ -41,6 +41,9 @@ export const CallbackPage: React.FC = () => {
       const code = params.get('code');
       const state = params.get('state');
 
+      console.log(code);
+      console.log(state);
+
       if (code && state) {
         try {
           const response = await fetch(
@@ -49,9 +52,11 @@ export const CallbackPage: React.FC = () => {
           );
           const data = await response.json();
 
+          console.log(data);
+
           if (data.access_token && data.refresh_token) {
             const credentials: Credentials = {
-              userId: data.userId || 'default_user',
+              userId: data.userId,
               accessToken: data.access_token,
               refreshToken: data.refresh_token,
               expiresAt: Date.now() + data.expires_in * 1000,
