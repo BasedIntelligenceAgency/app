@@ -6,6 +6,7 @@ import { CallbackPage } from "./CallbackPage";
 import { LoginPage } from "./Login";
 import { BasedView } from "./BasedView";
 import { Credentials } from "./types";
+import Loading from "./Loading";
 
 const STORAGE_KEY = "twitter-oauth-token";
 const DATA_STORAGE_KEY = "user-based-data";
