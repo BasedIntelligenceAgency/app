@@ -68,7 +68,9 @@ export default function App() {
       });
 
       if (!res.ok) {
-        throw new Error("Failed to fetch data.");
+        console.error("API error:", res.status, res.statusText);
+        await disconnect();
+        return;
       }
 
       const responseData = await res.json();
@@ -76,18 +78,19 @@ export default function App() {
       localStorage.setItem(DATA_STORAGE_KEY, JSON.stringify(responseData));
       return responseData;
     } catch (error) {
-      console.error(error);
+      console.error("Network error:", error);
+      await disconnect();
     } finally {
       setLoading(false);
     }
-  }, [credentials, loading]);
+  }, [credentials, loading, disconnect]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const isFreshAuth = params.get("fresh_auth") === "true";
 
     // Only fetch if we don't have data or if it's a fresh authentication
-    if (credentials && (isFreshAuth || !data)) {
+    if (credentials && (!data || isFreshAuth)) {
       // Clean up the URL if it's a fresh auth
       if (isFreshAuth) {
         window.history.replaceState({}, "", "/");
@@ -96,7 +99,7 @@ export default function App() {
       console.log("> get called here");
       fetchData();
     }
-  }, [credentials, fetchData, data]);
+  }, [credentials, fetchData]);
 
   if (loading) {
     return <Loading />;
